@@ -172,6 +172,21 @@ export default function QuizArena() {
                 });
             } catch (e) { console.error("Failed to submit Q", q.id, e); }
         }
+
+        // Calculate final score from all saved answers + just-submitted ones
+        const allAnswers = [
+            ...savedAnswers,
+            ...pending.map(q => ({ questionId: q.id, answer: currentSelections[q.id] }))
+        ];
+        const finalScore = (questions || []).filter(q => {
+            const ans = allAnswers.find(a => a.questionId === q.id);
+            return ans && ans.answer === q.correctAnswer;
+        }).length;
+
+        try {
+            await shogunApi.saveScore({ playerId: me.id, score: finalScore });
+        } catch (e) { console.error("Failed to save score", e); }
+
         setSubmitted(true);
     };
 

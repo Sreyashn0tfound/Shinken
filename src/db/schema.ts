@@ -50,9 +50,10 @@ export const players = pgTable("players", {
     clerkId: varchar("clerk_id", { length: 255 }).notNull(),
     clanId: integer("clan_id").references(() => clans.id, { onDelete: "cascade" }), 
     name: varchar("name", { length: 255 }).notNull(),
-    usn: varchar("usn", { length: 50 }), // 🚨 NEW: Stores University Seat Number
-    role: varchar("role", { length: 50 }).default("member"), // 'captain' or 'member'
+    usn: varchar("usn", { length: 50 }),
+    role: varchar("role", { length: 50 }).default("member"),
     strikes: integer("strikes").default(0),
+    score: integer("score").default(0), // Final marks saved on submit
 });
 
 // --- THE IRON VAULT: Answers ---

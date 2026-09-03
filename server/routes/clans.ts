@@ -114,7 +114,14 @@ clanRouter.post('/submit-answer', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Vault sealed. Failed to submit." }); }
 });
 
-// --- 6. LOG ANTI-CHEAT STRIKES ---
+// --- 7. SAVE FINAL SCORE ---
+clanRouter.post('/save-score', async (req, res) => {
+    try {
+        const { playerId, score } = req.body;
+        await db.update(players).set({ score }).where(eq(players.id, playerId));
+        res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: "Failed to save score" }); }
+});
 clanRouter.post('/strike', async (req, res) => {
     try {
         const { playerId } = req.body;

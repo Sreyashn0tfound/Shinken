@@ -60,6 +60,16 @@ export const shogunApi = {
         return res.json();
     },
 
+    saveScore: async (payload) => {
+        const res = await fetch(`${API_URL}/clans/save-score`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Failed to save score");
+        return res.json();
+    },
+
     // --- SESSIONS (TEACHER) ---
     verifySession: async (pin) => {
         const res = await fetch(`${API_URL}/sessions/verify/${pin}`);

@@ -59,18 +59,18 @@ export default function HeroCanvas() {
     return (
         <div style={{ 
             width: '100vw', 
-            height: '100vh', 
+            minHeight: '100vh', 
             position: 'relative',
             backgroundColor: '#f5fff6',
-            // 🚨 We layer a slight gradient over your image to ensure the UI remains readable, 
-            // and apply your AI image as the primary background!
             backgroundImage: `
                 linear-gradient(rgba(245, 255, 246, 0.1), rgba(245, 255, 246, 0.4)),
                 url("/ChatGPT Image Sep 2, 2026, 09_41_42 PM.png")
             `,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            overflowX: 'hidden',
+            overflowY: 'auto',
         }}>
             <FallingSakura />
 
@@ -97,7 +97,7 @@ export default function HeroCanvas() {
                 <span style={{ fontSize: '45vh', color: '#8B0000', fontWeight: '900', transform: 'rotate(5deg)' }}>剣</span>
             </div>
 
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+            <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2, pointerEvents: 'none' }}>
                 <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
                     <ambientLight intensity={0.6} />
                     <directionalLight position={[10, 10, 5]} intensity={1.5} />
@@ -111,9 +111,11 @@ export default function HeroCanvas() {
             </div>
 
             <div style={{
-                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                zIndex: 3, pointerEvents: 'none', display: 'flex', flexDirection: 'column',
-                justifyContent: 'space-between', alignItems: 'center', padding: '15vh 0 10vh 0'
+                position: 'relative', zIndex: 3, pointerEvents: 'none',
+                display: 'flex', flexDirection: 'column',
+                justifyContent: 'space-between', alignItems: 'center',
+                minHeight: '100vh',
+                padding: '15vh 1rem 10vh 1rem'
             }}>
                 <div style={{ textAlign: 'center', textShadow: '0px 4px 15px rgba(255,255,255,0.9)' }}>
                     {/* The h1 text is visually hidden since it is painted on your background image */}
