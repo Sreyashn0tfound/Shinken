@@ -1,0 +1,128 @@
+/* Import the English-Japanese Brush Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Shojumaru&family=Kaushan+Script&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #f5fff6;
+  background-image: url("https://www.transparenttextures.com/patterns/rice-paper.png");
+  font-family: sans-serif;
+}
+
+/* --- SAKURA PETAL ANIMATIONS --- */
+.petal {
+  position: absolute;
+  background: linear-gradient(135deg, #ffb6c1, #ff69b4);
+  border-radius: 15px 0 15px 0;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+  }
+
+  100% {
+    transform: translate3d(0, 110vh, 0) rotate(720deg);
+  }
+}
+
+@keyframes sway {
+  0% {
+    margin-left: 0px;
+  }
+
+  50% {
+    margin-left: 50px;
+  }
+
+  100% {
+    margin-left: -50px;
+  }
+}
+
+/* --- THE INK BRUSH BUTTONS --- */
+.ink-button {
+  position: relative;
+  pointer-events: auto;
+  /* Re-enables clicking */
+  padding: 1rem 2.5rem;
+  font-size: 1.5rem;
+  font-family: 'Kaushan Script', cursive;
+  /* The fluid ink font */
+  color: #111;
+  background-color: transparent;
+  border: 3px solid #111;
+  cursor: pointer;
+  box-shadow: 8px 8px 0px #111;
+  transition: transform 0.1s, box-shadow 0.1s, color 0.3s;
+
+  /* Applying the rice paper texture directly OVER the button */
+  background-image: url("https://www.transparenttextures.com/patterns/rice-paper.png");
+  z-index: 1;
+  /* Keeps text above the hover ink stroke */
+  overflow: hidden;
+  /* Traps the animation inside the button borders */
+}
+
+.ink-button.primary {
+  background-color: #8B0000;
+  color: #f5fff6;
+  border-color: #4A0000;
+  box-shadow: 8px 8px 0px #4A0000;
+}
+
+/* The Ink Stroke Hover Animation Layer */
+.ink-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #111;
+  /* The ink color */
+  z-index: -1;
+  /* Puts the ink BEHIND the text */
+
+  /* Animating it to strike from left to right */
+  transform: scaleX(0);
+  transform-origin: left;
+  /* Custom bezier curve makes it snap fast like a real pen stroke */
+  transition: transform 0.3s cubic-bezier(0.86, 0, 0.07, 1);
+}
+
+.ink-button.primary::before {
+  background-color: #111;
+}
+
+/* Hover Triggers */
+.ink-button:hover::before {
+  transform: scaleX(1);
+  /* Fires the pen stroke */
+}
+
+.ink-button:hover {
+  color: #FF69B4;
+  /* Text turns Sakura Pink so you can read it over the black ink */
+  transform: translate(4px, 4px);
+  /* Pushes the button down physically */
+  box-shadow: 4px 4px 0px #111;
+  /* Shrinks the shadow to simulate pressing it into the paper */
+}
+
+.ink-button.primary:hover {
+  color: #FF69B4;
+  box-shadow: 4px 4px 0px #4A0000;
+}
