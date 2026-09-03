@@ -9,7 +9,7 @@ export const sessionRouter = Router();
 // --- 0. INITIALIZE TOURNAMENT ---
 sessionRouter.post('/initialize', async (req, res) => {
     try {
-        const { hostId, mode, issueCertificates, certificateBase64, quizId } = req.body;
+        const { hostId, mode, issueCertificates, certificateBase64, quizId, duration } = req.body;
 
         let activeQuizId = quizId || 1;
         const existingQuiz = await db.select().from(quizzes).where(eq(quizzes.id, activeQuizId));
@@ -29,6 +29,7 @@ sessionRouter.post('/initialize', async (req, res) => {
             quizId: activeQuizId,
             pin,
             mode,
+            duration: duration || 30,
             issueCertificates,
             certificateBase64: issueCertificates ? certificateBase64 : null,
             status: 'waiting_in_lobby'
