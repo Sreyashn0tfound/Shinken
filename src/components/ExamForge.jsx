@@ -3,7 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { shogunApi } from '../api';
 import FallingSakura from './FallingSakura';
 
-const API_URL = "http://localhost:3001/api";
+const API_URL = import.meta.env.PROD ? "/api" : "http://localhost:3001/api";
 
 export default function ExamForge({ onBack }) {
     const { user } = useUser();
