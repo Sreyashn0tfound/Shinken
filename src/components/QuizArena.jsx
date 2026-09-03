@@ -66,7 +66,8 @@ export default function QuizArena() {
     const me = players.find(p => p.clerkId === user?.id);
 
     const isGate2Phase = ["active_gate_2", "tournament_complete"].includes(session?.status);
-    const TIME_LIMIT = session?.status === "active_gate_2" ? 2700 : 1800;
+    // Use session.duration (set by teacher) instead of hardcoded values
+    const TIME_LIMIT = (session?.duration || 30) * 60;
 
     useEffect(() => {
         setEarlySubmit(false);
@@ -82,6 +83,11 @@ export default function QuizArena() {
             const elapsedSeconds = Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000);
             const remaining = Math.max(0, TIME_LIMIT - elapsedSeconds);
             setTimeLeft(remaining);
+            // Auto-submit when time runs out
+            if (remaining === 0) {
+                clearInterval(timer);
+                submitAllAnswers();
+            }
         }, 1000);
 
         return () => clearInterval(timer);
@@ -347,13 +353,64 @@ export default function QuizArena() {
     }
 
     if (isWaitingForLock) {
+        const analytics = calculateAnalytics();
         return (
-            <div style={{ height: '100vh', backgroundColor: '#eef2e6', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', fontFamily: "'Shojumaru', cursive", padding: '2rem', textAlign: 'center' }}>
-                <h2 style={{ fontSize: '4rem', color: '#8B0000', marginBottom: '1rem' }}>BLADES SHEATHED</h2>
-                <p style={{ fontFamily: "'Courier New', monospace", fontSize: '1.5rem', fontWeight: 'bold', color: '#111', maxWidth: '600px', backgroundColor: 'rgba(255,255,255,0.7)', padding: '2rem', border: '4px solid #111' }}>
-                    Your answers are secured in the vault. <br /><br />
-                    The final report and your fate will be revealed here the moment the Shogun locks the master gate.
-                </p>
+            <div style={{ height: '100vh', overflowY: 'auto', backgroundColor: '#eef2e6', backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")', padding: '4rem', fontFamily: "'Courier New', monospace" }}>
+                <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '4rem', borderBottom: '4px solid #8B0000', paddingBottom: '2rem' }}>
+                        <h1 style={{ fontFamily: "'Shojumaru', cursive", fontSize: '4rem', color: '#111', margin: 0 }}>BLADES SHEATHED</h1>
+                        <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8B0000', margin: '1rem 0 0 0' }}>Your answers have been secured in the vault.</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+                        <div style={{ backgroundColor: '#fff', border: '6px solid #111', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '12px 12px 0px #8B0000' }}>
+                            <h2 style={{ fontFamily: "'Kaushan Script', cursive", fontSize: '2rem', margin: 0, color: '#111' }}>{clan?.name}</h2>
+                            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 'bold', color: '#666' }}>Your Score</p>
+                            <div style={{ fontSize: '4rem', fontWeight: '900', color: '#8B0000', fontFamily: "'Shojumaru', cursive" }}>
+                                {analytics.correctCount} <span style={{ fontSize: '1.5rem', color: '#111' }}>/ {liveQuestions.length}</span>
+                            </div>
+                        </div>
+
+                        <div style={{ backgroundColor: '#111', color: '#fff', border: '6px solid #8B0000', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '12px 12px 0px rgba(0,0,0,0.5)' }}>
+                            <p style={{ margin: '0 0 1rem 0', fontWeight: 'bold', fontSize: '1.2rem', color: '#aaa', borderBottom: '1px solid #444', paddingBottom: '0.5rem' }}>Your Combat Stats:</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Correct:</span>
+                                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{analytics.correctCount}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ color: '#f44336', fontWeight: 'bold' }}>Wrong:</span>
+                                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{analytics.incorrectCount}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: '#aaa', fontWeight: 'bold' }}>Unanswered:</span>
+                                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{analytics.unansweredCount}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style={{ fontFamily: "'Shojumaru', cursive", fontSize: '2rem', color: '#111', marginBottom: '2rem' }}>Your Battle Record</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {liveQuestions.map((q, idx) => {
+                            const myAns = myAnswers.find(a => a.questionId === q.id);
+                            const isCorrect = myAns?.answer === q.correctAnswer;
+                            const didNotAnswer = !myAns;
+                            return (
+                                <div key={q.id} style={{ border: '3px solid #111', backgroundColor: didNotAnswer ? '#f5f5f5' : (isCorrect ? '#e8f5e9' : '#ffebee'), padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ fontWeight: 'bold', margin: '0 0 0.5rem 0', color: '#8B0000' }}>Q{idx + 1}: {q.title}</p>
+                                        <p style={{ margin: 0, fontSize: '1.1rem' }}><span style={{ color: '#666' }}>Your Answer:</span> {didNotAnswer ? "No Shot Fired" : myAns.answer}</p>
+                                    </div>
+                                    <div style={{ flex: 1, textAlign: 'center' }}>
+                                        <p style={{ margin: 0, fontSize: '1.1rem', color: '#111', fontWeight: 'bold' }}><span style={{ color: '#666' }}>True Answer:</span> {q.correctAnswer}</p>
+                                    </div>
+                                    <div style={{ fontSize: '2.5rem', width: '50px', textAlign: 'right' }}>
+                                        {didNotAnswer ? '⏳' : (isCorrect ? '✅' : '❌')}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -394,7 +451,36 @@ export default function QuizArena() {
         }
     };
 
-    const handleEarlySubmit = () => { if (window.confirm("Are you sure?")) setEarlySubmit(true); };
+    const handleEarlySubmit = () => { if (window.confirm("Are you sure? All saved answers will be submitted.")) submitAllAnswers(); };
+
+    // Bulk-submits every pending selection that hasn't been saved yet, then marks as done
+    const submitAllAnswers = async () => {
+        if (!me || !liveQuestions || !session) return;
+        const timeSpent = session.startTime
+            ? Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000)
+            : 0;
+
+        // Submit any selections the student made but didn't hit "Save & Next" on
+        const pending = liveQuestions.filter(q => {
+            const alreadySaved = myAnswers.find(a => a.questionId === q.id);
+            return !alreadySaved && selections[q.id];
+        });
+
+        for (const q of pending) {
+            try {
+                await shogunApi.submitAnswer({
+                    playerId: me.id,
+                    questionId: q.id,
+                    sessionId: session.id,
+                    answer: selections[q.id],
+                    timeSpent,
+                });
+            } catch (err) {
+                console.error("Failed to submit answer for Q", q.id, err);
+            }
+        }
+        setEarlySubmit(true);
+    };
 
     return (
         <div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'row', backgroundColor: '#eef2e6', backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")', fontFamily: "'Courier New', monospace", userSelect: 'none', overflow: 'hidden' }}>
