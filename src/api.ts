@@ -79,7 +79,10 @@ export const shogunApi = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error("Failed to initialize");
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || err.error || "Failed to initialize");
+        }
         return res.json();
     },
 

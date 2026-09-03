@@ -37,7 +37,7 @@ sessionRouter.post('/initialize', async (req, res) => {
         res.json({ success: true, session: newSession[0] });
     } catch (error) {
         console.error("Initialization Error:", error);
-        res.status(500).json({ error: "Failed to initialize the arena." });
+        res.status(500).json({ error: "Failed to initialize the arena.", detail: error instanceof Error ? error.message : String(error) });
     }
 });
 

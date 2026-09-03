@@ -152,7 +152,7 @@ export default function TeacherDashboard() {
             });
             setView('live_arena');
         } catch (e) {
-            alert("Initialization failed.");
+            alert("Initialization failed: " + (e?.message || e));
         } finally {
             setIsInitializing(false);
         }
