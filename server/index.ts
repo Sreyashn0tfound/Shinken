@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { aiRouter } from './routes/ai.ts';
-import { clanRouter } from './routes/clans.ts';
-import { sessionRouter } from './routes/sessions.ts';
-import { questionRouter } from './routes/questions.ts';
-import { certificateRouter } from './routes/certificates.ts';
-import { quizRouter } from './routes/quizzes.ts';
+import { aiRouter } from './routes/ai.js';
+import { clanRouter } from './routes/clans.js';
+import { sessionRouter } from './routes/sessions.js';
+import { questionRouter } from './routes/questions.js';
+import { certificateRouter } from './routes/certificates.js';
+import { quizRouter } from './routes/quizzes.js';
 
 dotenv.config({ path: '.env.local' });
 
