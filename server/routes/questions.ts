@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../db.ts';
-import { questions, quizzes } from '../../src/db/schema.ts'; // 🚨 Added quizzes
+import { db } from '../db.js';
+import { questions, quizzes } from '../../src/db/schema.js'; // 🚨 Added quizzes
 import { eq } from 'drizzle-orm';
 
 export const questionRouter = Router();

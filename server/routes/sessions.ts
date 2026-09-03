@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 // 🚨 ADDED answers and questions to the imports!
-import { sessions, clans, players, quizzes, answers, questions } from '../../src/db/schema.ts'; 
+import { sessions, clans, players, quizzes, answers, questions } from '../../src/db/schema.js'; 
 import { eq, desc } from 'drizzle-orm';
 
 export const sessionRouter = Router();

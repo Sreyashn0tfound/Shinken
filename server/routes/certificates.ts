@@ -16,7 +16,7 @@ certificateRouter.post('/generate/:sessionId', async (req, res) => {
             return res.status(400).json({ error: "Certificates are disabled for this event." });
         }
 
-        const templateUrl = sessionData[0].certificateTemplateUrl;
+        const templateUrl = sessionData[0].certificateBase64;
 
         // 2. Fetch and rank the clans by totalScore (Highest to Lowest)
         const rankedClans = await db.select()

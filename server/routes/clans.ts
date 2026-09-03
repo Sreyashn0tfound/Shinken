@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../db.ts';
-import { clans, players, sessions, answers } from '../../src/db/schema.ts';
+import { db } from '../db.js';
+import { clans, players, sessions, answers } from '../../src/db/schema.js';
 import { eq, and, count } from 'drizzle-orm';
 
 export const clanRouter = Router();
