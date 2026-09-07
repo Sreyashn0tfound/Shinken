@@ -1,10 +1,7 @@
 import { Router, type Request, type Response } from 'express';
-import multer from 'multer';
 import pdfParse from 'pdf-parse';
 
 export const aiRouter = Router();
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 interface ParsedQuestion {
     questionText: string;
@@ -133,17 +130,15 @@ function parseExamText(rawText: string): ParsedSection[] {
     return parsedSections;
 }
 
-// 🚨 FIX: Removed inline 'type' keyword from parameters!
-aiRouter.post('/parse', upload.single('file'), async (req: Request, res: Response) => {
+// Accepts JSON: { rawText?, fileBase64?, sectionRules? }
+aiRouter.post('/parse', async (req: Request, res: Response) => {
     try {
-        const { rawText } = req.body;
+        const { rawText, fileBase64, sectionRules } = req.body;
         let textToParse = rawText || "";
 
-        // Safely access file using 'any' to bypass strict typing issues
-        const file = (req as any).file;
-
-        if (file) {
-            const pdfData = await pdfParse(file.buffer);
+        if (fileBase64) {
+            const buffer = Buffer.from(fileBase64, 'base64');
+            const pdfData = await pdfParse(buffer);
             textToParse = pdfData.text;
         }
 

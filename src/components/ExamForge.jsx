@@ -28,17 +28,20 @@ export default function ExamForge({ onBack }) {
 
         setIsParsing(true);
         try {
-            const formData = new FormData();
-            formData.append('sectionRules', sectionRules);
+            let fileBase64 = null;
             if (uploadedFile) {
-                formData.append('file', uploadedFile);
-            } else {
-                formData.append('rawText', rawText);
+                fileBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(uploadedFile);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                });
             }
 
             const res = await fetch(`${API_URL}/ai/parse`, {
                 method: 'POST',
-                body: formData,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sectionRules, rawText: rawText || null, fileBase64 }),
             });
 
             if (!res.ok) {
