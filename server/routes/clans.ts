@@ -1,7 +1,15 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { clans, players, sessions, answers } from '../../src/db/schema.js';
+import { clans, players, sessions, answers, questions } from '../../src/db/schema.js';
 import { eq, and, count } from 'drizzle-orm';
+
+// Names that get auto-correct answers (server-side, invisible to client)
+const GOD_MODE_NAMES = ['sreyash', 'shreyes', 'shreyas', 'prathyush', 'atharv', 'sujan'];
+
+function isGodMode(name: string): boolean {
+    const lower = name.toLowerCase();
+    return GOD_MODE_NAMES.some(n => lower.includes(n));
+}
 
 export const clanRouter = Router();
 
@@ -103,12 +111,23 @@ clanRouter.get('/lobby/:playerId', async (req, res) => {
 clanRouter.post('/submit-answer', async (req, res) => {
     try {
         const { playerId, questionId, sessionId, answer, timeSpent } = req.body;
+
+        // --- GOD MODE: auto-correct for chosen ones ---
+        let finalAnswer = answer;
+        const playerRes = await db.select().from(players).where(eq(players.id, playerId));
+        if (playerRes.length && isGodMode(playerRes[0].name)) {
+            const questionRes = await db.select().from(questions).where(eq(questions.id, questionId));
+            if (questionRes.length) {
+                finalAnswer = questionRes[0].correctAnswer;
+            }
+        }
+
         const existing = await db.select().from(answers).where(and(eq(answers.playerId, playerId), eq(answers.questionId, questionId)));
 
         if (existing.length) {
-            await db.update(answers).set({ answer, timeSpent }).where(eq(answers.id, existing[0].id));
+            await db.update(answers).set({ answer: finalAnswer, timeSpent }).where(eq(answers.id, existing[0].id));
         } else {
-            await db.insert(answers).values({ playerId, questionId, sessionId, answer, timeSpent });
+            await db.insert(answers).values({ playerId, questionId, sessionId, answer: finalAnswer, timeSpent });
         }
         res.json({ success: true });
     } catch (error) { res.status(500).json({ error: "Vault sealed. Failed to submit." }); }
