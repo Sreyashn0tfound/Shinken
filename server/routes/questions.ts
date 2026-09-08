@@ -28,7 +28,35 @@ questionRouter.post('/forge', async (req, res) => {
 // --- 2. BULK INSERT AI EXAM (GEMINI) ---
 questionRouter.post('/ai-forge', async (req, res) => {
     try {
-        const { teacherId, title, sections } = req.body;
+        const { teacherId, title, sections, existingQuizId } = req.body;
+
+        // If the parse returned an existing seeded quiz, just create a new quiz
+        // record under this teacher that re-uses the same questions
+        if (existingQuizId) {
+            const newQuiz = await db.insert(quizzes).values({
+                teacherId,
+                title
+            }).returning();
+
+            const activeQuizId = newQuiz[0].id;
+
+            // Copy questions from the seeded quiz to the new quiz
+            const sourceQuestions = await db.select().from(questions).where(eq(questions.quizId, existingQuizId));
+            if (sourceQuestions.length > 0) {
+                await db.insert(questions).values(
+                    sourceQuestions.map(q => ({
+                        quizId: activeQuizId,
+                        sectionTitle: q.sectionTitle,
+                        title: q.title,
+                        text: q.text,
+                        options: q.options,
+                        correctAnswer: q.correctAnswer,
+                    }))
+                );
+            }
+
+            return res.json({ success: true, quizId: activeQuizId });
+        }
 
         // 1. Forge the Master Quiz Record
         const newQuiz = await db.insert(quizzes).values({

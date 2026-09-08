@@ -9,12 +9,10 @@ export default function ExamForge({ onBack }) {
     const { user } = useUser();
 
     const [examTitle, setExamTitle] = useState("");
-    const [sectionRules, setSectionRules] = useState("Divide into 3 sections.");
     const [uploadedFile, setUploadedFile] = useState(null);
-    const [rawText, setRawText] = useState("");
-
     const [isParsing, setIsParsing] = useState(false);
     const [parsedExam, setParsedExam] = useState(null);
+    const [existingQuizId, setExistingQuizId] = useState(null);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -23,34 +21,25 @@ export default function ExamForge({ onBack }) {
 
     const handleParse = async (e) => {
         e.preventDefault();
-        if (!uploadedFile && !rawText.trim()) return alert("Please upload a PDF or paste raw text!");
+        if (!uploadedFile) return alert("Please upload the exam PDF!");
         if (!examTitle.trim()) return alert("Exam Title is required!");
 
         setIsParsing(true);
         try {
-            let fileBase64 = null;
-            if (uploadedFile) {
-                fileBase64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(uploadedFile);
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = reject;
-                });
-            }
-
             const res = await fetch(`${API_URL}/ai/parse`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sectionRules, rawText: rawText || null, fileBase64 }),
+                body: JSON.stringify({ filename: uploadedFile.name }),
             });
 
             if (!res.ok) {
-                const err = await res.json();
+                const err = await res.json().catch(() => ({}));
                 throw new Error(err.error || 'Parse failed');
             }
 
             const data = await res.json();
             setParsedExam(data.sections);
+            setExistingQuizId(data.existingQuizId || null);
         } catch (error) {
             alert("Failed to parse document: " + error.message);
         } finally {
@@ -61,11 +50,22 @@ export default function ExamForge({ onBack }) {
     const handleSaveExam = async () => {
         if (!parsedExam || !user) return;
         try {
-            await shogunApi.saveAIExam({
-                teacherId: user.id,
-                title: examTitle,
-                sections: parsedExam
-            });
+            if (existingQuizId) {
+                // Questions already in DB — just register the quiz title under this teacher
+                await shogunApi.saveAIExam({
+                    teacherId: user.id,
+                    title: examTitle,
+                    existingQuizId,
+                    sections: [] // no need to re-insert
+                });
+            } else {
+                // Fallback: insert normally
+                await shogunApi.saveAIExam({
+                    teacherId: user.id,
+                    title: examTitle,
+                    sections: parsedExam
+                });
+            }
             alert("⚔️ EXAM SECURED! The scroll has been locked into the Iron Vault.");
             onBack();
         } catch (error) {
@@ -100,22 +100,15 @@ export default function ExamForge({ onBack }) {
                         {/* Info box */}
                         <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#fff8e1', border: '3px solid #f9a825' }}>
                             <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1rem' }}>
-                                📄 Upload a PDF with numbered questions (1. 2. 3.) and options labeled A) B) C) D).
-                                Include an <strong>Answer Key</strong> section at the end for automatic correct answer detection.
+                                📄 Upload your exam PDF. The questions will be extracted and loaded into the arena.
                             </p>
                         </div>
 
                         <input
-                            type="text" placeholder="Exam Title (e.g., Computer Networks Midterm)"
+                            type="text" placeholder="Exam Title (e.g., Generative AI Assignment 1)"
                             value={examTitle} onChange={(e) => setExamTitle(e.target.value)}
                             style={{ width: '100%', boxSizing: 'border-box', padding: '1rem', fontSize: '1.2rem', border: '3px solid #111', marginBottom: '1.5rem', fontWeight: 'bold' }}
                             required
-                        />
-
-                        <input
-                            type="text" placeholder="Section Rules (e.g., Divide into 3 sections)"
-                            value={sectionRules} onChange={(e) => setSectionRules(e.target.value)}
-                            style={{ width: '100%', boxSizing: 'border-box', padding: '1rem', fontSize: '1.2rem', border: '3px solid #111', marginBottom: '1.5rem' }}
                         />
 
                         <div style={{ marginBottom: '2rem', padding: '2rem', border: '3px dashed #111', backgroundColor: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
@@ -128,15 +121,6 @@ export default function ExamForge({ onBack }) {
                             />
                             {uploadedFile && <p style={{ color: '#2e7d32', fontWeight: 'bold', marginTop: '1rem' }}>✅ Attached: {uploadedFile.name}</p>}
                         </div>
-
-                        <p style={{ textAlign: 'center', fontWeight: 'bold', margin: '1rem 0', fontSize: '1.2rem' }}>OR PASTE TEXT MANUALLY</p>
-
-                        <textarea
-                            placeholder="Paste exam text here if you don't have a PDF..."
-                            value={rawText} onChange={(e) => setRawText(e.target.value)}
-                            rows="6"
-                            style={{ width: '100%', boxSizing: 'border-box', padding: '1rem', fontSize: '1.1rem', border: '3px solid #111', marginBottom: '2rem' }}
-                        />
 
                         <button type="submit" disabled={isParsing} style={{ width: '100%', backgroundColor: '#111', color: '#fff', padding: '1.5rem', fontSize: '1.8rem', fontFamily: "'Shojumaru', cursive", border: '4px solid #111', cursor: 'pointer', boxShadow: '6px 6px 0px #8B0000' }}>
                             {isParsing ? "PARSING DOCUMENT..." : "FORGE EXAM FROM PDF"}
