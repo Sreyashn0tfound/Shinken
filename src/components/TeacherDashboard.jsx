@@ -10,6 +10,7 @@ export default function TeacherDashboard() {
     // --- STATE MANAGEMENT ---
     const [view, setView] = useState('armory'); 
     const [teacherQuizzes, setTeacherQuizzes] = useState([]);
+    const [historyData, setHistoryData] = useState([]);
     
     // Deployment & Preview States
     const [selectedQuizId, setSelectedQuizId] = useState(null);
@@ -56,6 +57,20 @@ export default function TeacherDashboard() {
         fetchRadar(); 
         const interval = setInterval(fetchRadar, 3000); 
         return () => clearInterval(interval);
+    }, [user, view]);
+
+    // --- 2.5 FETCH HISTORY ---
+    useEffect(() => {
+        if (!user || view !== 'history') return;
+        const fetchHistory = async () => {
+            try {
+                const data = await shogunApi.getHistory(user.id);
+                setHistoryData(data.history || []);
+            } catch (error) {
+                console.error("Failed to load history", error);
+            }
+        };
+        fetchHistory();
     }, [user, view]);
 
     // 🚨 Extracting the full payload from the backend
@@ -161,6 +176,39 @@ export default function TeacherDashboard() {
     const handleStart = async () => { if (window.confirm("Commence the Trials?")) await shogunApi.startTrials(session.id); };
     const handleReset = async () => { if (window.confirm("🚨 EMERGENCY RESTART: Erase all answers and send everyone to lobby?")) await shogunApi.resetTrials(session.id); };
 
+    const handleExportCSV = (sessionRecord) => {
+        const { session, quiz, clans, players, answers, questions } = sessionRecord;
+        
+        const clanScores = clans.map(clan => {
+            let points = 0;
+            const clanPlayerIds = players.filter(p => p.clanId === clan.id).map(p => p.id);
+            const clanAnswers = answers.filter(a => clanPlayerIds.includes(a.playerId));
+            clanAnswers.forEach(ans => {
+                const q = questions.find(q => q.id === ans.questionId);
+                if (q && q.correctAnswer === ans.answer) points += 1;
+            });
+            return { clanName: clan.name, points };
+        });
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += `Session ID,${session.id}\n`;
+        csvContent += `Quiz Title,${quiz?.title || 'Unknown'}\n`;
+        csvContent += `Date,${session.startTime ? new Date(session.startTime).toLocaleString() : 'N/A'}\n\n`;
+        csvContent += `Clan Name,Score\n`;
+        
+        clanScores.sort((a, b) => b.points - a.points).forEach(row => {
+            csvContent += `"${row.clanName}",${row.points}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Exam_Results_Session_${session.id}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // ==========================================
     // RENDER: THE AI FORGE
     // ==========================================
@@ -197,9 +245,12 @@ export default function TeacherDashboard() {
                 {/* ========================================== */}
                 {view === 'armory' && (
                     <>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem', gap: '2rem' }}>
                             <button onClick={() => setView('forge')} className="ink-button primary" style={{ fontSize: '1.5rem' }}>
                                 ⚔️ FORGE NEW EXAM
+                            </button>
+                            <button onClick={() => setView('history')} className="ink-button" style={{ fontSize: '1.5rem', backgroundColor: '#333' }}>
+                                📜 EXAM HISTORY
                             </button>
                         </div>
 
@@ -380,6 +431,38 @@ export default function TeacherDashboard() {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* ========================================== */}
+                {/* STATE 5: EXAM HISTORY                      */}
+                {/* ========================================== */}
+                {view === 'history' && (
+                    <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', padding: '3rem', border: '4px solid #111', boxShadow: '12px 12px 0px rgba(139,0,0,0.15)' }}>
+                        <button onClick={() => setView('armory')} style={{ backgroundColor: 'transparent', color: '#8B0000', border: 'none', padding: 0, fontWeight: 'bold', fontSize: '1.2rem', cursor: 'pointer', textDecoration: 'underline', marginBottom: '2rem' }}>
+                            ← Back to Armory
+                        </button>
+                        
+                        <h2 style={{ fontFamily: "'Kaushan Script', cursive", fontSize: '3rem', color: '#8B0000', margin: '0 0 2rem 0' }}>Exam History</h2>
+                        
+                        {historyData.length === 0 ? (
+                            <p>No past exams found.</p>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                {historyData.map((record, idx) => (
+                                    <div key={idx} style={{ padding: '2rem', border: '4px solid #111', backgroundColor: '#fffcf0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontFamily: "'Shojumaru', cursive" }}>{record.quiz?.title || 'Unknown Quiz'}</h3>
+                                            <p style={{ margin: 0, fontWeight: 'bold', color: '#666' }}>Session: {record.session.pin} | Date: {record.session.startTime ? new Date(record.session.startTime).toLocaleDateString() : 'N/A'}</p>
+                                            <p style={{ margin: '0.5rem 0 0 0', fontWeight: 'bold' }}>Participants: {record.clans.length} Clans</p>
+                                        </div>
+                                        <button onClick={() => handleExportCSV(record)} className="ink-button primary" style={{ fontSize: '1.2rem' }}>
+                                            📊 EXPORT CSV
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

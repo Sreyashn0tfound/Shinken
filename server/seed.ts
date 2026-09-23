@@ -16,277 +16,227 @@ const db = drizzle(sql, { schema });
 const QUIZ_TITLE = "Generative AI – Assignment 1: Word Embeddings";
 const TEACHER_ID = "system"; // system-owned quiz
 
-const QUESTIONS = [
-    {
-        title: "Q1. Primary limitation of One-Hot Encoding",
-        text: "What is the primary limitation of One-Hot Encoding when representing words in NLP?",
-        options: [
-            "A) It requires GPU acceleration",
-            "B) It produces sparse, high-dimensional vectors with no semantic meaning",
-            "C) It only works for numerical data",
-            "D) It cannot be implemented in Python"
-        ],
-        correctAnswer: "B) It produces sparse, high-dimensional vectors with no semantic meaning"
-    },
-    {
-        title: "Q2. One-Hot dimensionality",
-        text: "In One-Hot Encoding, if a vocabulary has 10,000 unique words, what will be the dimensionality of each word's vector?",
-        options: ["A) 100", "B) 1,000", "C) 10,000", "D) log(10,000)"],
-        correctAnswer: "C) 10,000"
-    },
-    {
-        title: "Q3. TRUE about One-Hot Encoding vectors",
-        text: "Which of the following is TRUE about One-Hot Encoding vectors?",
-        options: [
-            "A) They capture semantic similarity between words",
-            "B) They are dense and low-dimensional",
-            "C) They are sparse and high-dimensional",
-            "D) They require a neural network to generate"
-        ],
-        correctAnswer: "C) They are sparse and high-dimensional"
-    },
-    {
-        title: "Q4. Synonyms in One-Hot Encoding",
-        text: 'Why can\'t One-Hot Encoding capture the relationship between synonyms like "happy" and "joyful"?',
-        options: [
-            "A) Synonyms are removed during preprocessing",
-            "B) Each word vector is orthogonal, so similarity between any two distinct words is always zero",
-            "C) One-Hot Encoding only works with antonyms",
-            "D) The vocabulary size is too small"
-        ],
-        correctAnswer: "B) Each word vector is orthogonal, so similarity between any two distinct words is always zero"
-    },
-    {
-        title: "Q5. Curse of dimensionality",
-        text: 'What does the term "curse of dimensionality" refer to in the context of One-Hot Encoding?',
-        options: [
-            "A) Vectors becoming negative in value",
-            "B) Vocabulary growth causing exponentially increasing sparse dimensions and inefficiency",
-            "C) Words losing their meaning over time",
-            "D) The model overfitting on small datasets"
-        ],
-        correctAnswer: "B) Vocabulary growth causing exponentially increasing sparse dimensions and inefficiency"
-    },
-    {
-        title: "Q6. Word2Vec developer",
-        text: "Word2Vec was developed by which organization/researcher?",
-        options: [
-            "A) Stanford NLP Group",
-            "B) Facebook AI Research",
-            "C) Tomas Mikolov's team at Google",
-            "D) OpenAI"
-        ],
-        correctAnswer: "C) Tomas Mikolov's team at Google"
-    },
-    {
-        title: "Q7. Word2Vec architectures",
-        text: "Name the two main architectures used in Word2Vec.",
-        options: [
-            "A) LSA and LDA",
-            "B) CBOW and Skip-gram",
-            "C) Encoder and Decoder",
-            "D) BERT and GPT"
-        ],
-        correctAnswer: "B) CBOW and Skip-gram"
-    },
-    {
-        title: "Q8. CBOW prediction",
-        text: "In the CBOW (Continuous Bag of Words) model, what is being predicted?",
-        options: [
-            "A) The next sentence",
-            "B) The surrounding context words given a target word",
-            "C) The target (center) word given its surrounding context words",
-            "D) The part of speech of a word"
-        ],
-        correctAnswer: "C) The target (center) word given its surrounding context words"
-    },
-    {
-        title: "Q9. Skip-gram prediction",
-        text: "In the Skip-gram model, what is being predicted?",
-        options: [
-            "A) The target word given the context",
-            "B) The surrounding context words given a target (center) word",
-            "C) The sentiment of the sentence",
-            "D) The document topic"
-        ],
-        correctAnswer: "B) The surrounding context words given a target (center) word"
-    },
-    {
-        title: "Q10. Word2Vec architecture for small datasets",
-        text: "Which Word2Vec architecture generally performs better with small datasets and rare words?",
-        options: [
-            "A) CBOW",
-            "B) Skip-gram",
-            "C) Both perform identically",
-            "D) Neither works with small datasets"
-        ],
-        correctAnswer: "B) Skip-gram"
-    },
-    {
-        title: "Q11. Context window size in Word2Vec",
-        text: 'In Word2Vec, what is the typical range used for the "context window size," and what effect does increasing it have?',
-        options: [
-            "A) 50–100 words; increases training speed only",
-            "B) 2–10 words; larger windows capture more topical/semantic relationships, smaller windows capture more syntactic relationships",
-            "C) 1 word only; window size has no real effect",
-            "D) 1,000 words; it removes the need for negative sampling"
-        ],
-        correctAnswer: "B) 2–10 words; larger windows capture more topical/semantic relationships, smaller windows capture more syntactic relationships"
-    },
-    {
-        title: "Q12. Famous vector arithmetic example",
-        text: "What is the famous vector arithmetic example demonstrating Word2Vec's semantic relationships?",
-        options: [
-            "A) Cat - Dog + Fish = Bird",
-            "B) King - Man + Woman ≈ Queen",
-            "C) Paris - London = Rome",
-            "D) Good - Bad + Happy = Sad"
-        ],
-        correctAnswer: "B) King - Man + Woman ≈ Queen"
-    },
-    {
-        title: "Q13. Word2Vec learning type",
-        text: "Word2Vec embeddings are generated using:",
-        options: [
-            "A) Fully supervised learning with human-labeled data",
-            "B) Self-supervised learning, using the corpus itself to generate training signals",
-            "C) Rule-based linguistic parsing",
-            "D) Random vector assignment"
-        ],
-        correctAnswer: "B) Self-supervised learning, using the corpus itself to generate training signals"
-    },
-    {
-        title: "Q14. Word2Vec OOV limitation",
-        text: "What is a major limitation of Word2Vec regarding unseen words?",
-        options: [
-            "A) It cannot generate embeddings for out-of-vocabulary (OOV) words",
-            "B) It only works with verbs",
-            "C) It cannot handle more than 10,000 words",
-            "D) It requires labeled OOV data"
-        ],
-        correctAnswer: "A) It cannot generate embeddings for out-of-vocabulary (OOV) words"
-    },
-    {
-        title: "Q15. GloVe stands for",
-        text: "GloVe stands for:",
-        options: [
-            "A) Global Vector Encoding",
-            "B) Global Vectors for Word Representation",
-            "C) Generalized Local Vector Embedding",
-            "D) Grouped Lexical Vector Estimation"
-        ],
-        correctAnswer: "B) Global Vectors for Word Representation"
-    },
-    {
-        title: "Q16. GloVe training data",
-        text: "GloVe embeddings are trained based on which type of statistical information?",
-        options: [
-            "A) Local sliding window predictions only",
-            "B) Random sampling of word pairs",
-            "C) Global word-to-word co-occurrence statistics across the corpus",
-            "D) Part-of-speech tagging frequencies"
-        ],
-        correctAnswer: "C) Global word-to-word co-occurrence statistics across the corpus"
-    },
-    {
-        title: "Q17. GloVe vs Word2Vec",
-        text: "How does GloVe fundamentally differ from Word2Vec in training approach?",
-        options: [
-            "A) GloVe uses only local context windows like Word2Vec",
-            "B) GloVe uses global co-occurrence statistics (count-based), while Word2Vec is predictive using local context windows",
-            "C) GloVe requires labeled data, Word2Vec does not",
-            "D) There is no fundamental difference"
-        ],
-        correctAnswer: "B) GloVe uses global co-occurrence statistics (count-based), while Word2Vec is predictive using local context windows"
-    },
-    {
-        title: "Q18. GloVe foundation matrix",
-        text: "What matrix is constructed as the foundation for training GloVe embeddings?",
-        options: [
-            "A) TF-IDF matrix",
-            "B) Word-word co-occurrence matrix",
-            "C) Confusion matrix",
-            "D) Identity matrix"
-        ],
-        correctAnswer: "B) Word-word co-occurrence matrix"
-    },
-    {
-        title: "Q19. GloVe developer",
-        text: "Which organization/university developed GloVe?",
-        options: [
-            "A) Google",
-            "B) Facebook AI Research",
-            "C) Stanford University",
-            "D) Microsoft Research"
-        ],
-        correctAnswer: "C) Stanford University"
-    },
-    {
-        title: "Q20. GloVe combining LSA and Word2Vec",
-        text: "Why is GloVe considered to combine advantages of matrix factorization (LSA) and local context window methods (Word2Vec)?",
-        options: [
-            "A) It uses deep neural networks exclusively",
-            "B) It leverages global corpus statistics along with fine-grained semantic relationships from co-occurrence patterns",
-            "C) It ignores context entirely",
-            "D) It only uses supervised labels"
-        ],
-        correctAnswer: "B) It leverages global corpus statistics along with fine-grained semantic relationships from co-occurrence patterns"
-    },
-    {
-        title: "Q21. FastText developer",
-        text: "FastText was developed by which organization?",
-        options: [
-            "A) Google",
-            "B) Facebook AI Research (FAIR)",
-            "C) Stanford NLP Group",
-            "D) Microsoft"
-        ],
-        correctAnswer: "B) Facebook AI Research (FAIR)"
-    },
-    {
-        title: "Q22. FastText key innovation",
-        text: "What is the key innovation in FastText compared to Word2Vec?",
-        options: [
-            "A) Use of transformer architecture",
-            "B) Representing words using character n-grams (subword information)",
-            "C) Removing the need for training data",
-            "D) Using only global co-occurrence counts"
-        ],
-        correctAnswer: "B) Representing words using character n-grams (subword information)"
-    },
-    {
-        title: "Q23. FastText internal representation",
-        text: "How does FastText represent a word internally?",
-        options: [
-            "A) As a single atomic vector only",
-            "B) As a combination/sum of character n-gram (subword) vectors",
-            "C) As a one-hot vector",
-            "D) As a syntax tree"
-        ],
-        correctAnswer: "B) As a combination/sum of character n-gram (subword) vectors"
-    },
-    {
-        title: "Q24. FastText OOV advantage",
-        text: "What major advantage does FastText have for OOV or misspelled words?",
-        options: [
-            "A) It ignores OOV words completely",
-            "B) It can compose embeddings for unseen words using known character n-grams",
-            "C) It requires retraining the entire model for new words",
-            "D) It has no advantage over Word2Vec/GloVe"
-        ],
-        correctAnswer: "B) It can compose embeddings for unseen words using known character n-grams"
-    },
-    {
-        title: "Q25. Best model for morphologically rich languages",
-        text: "Which model is most suitable for morphologically rich languages (e.g., Turkish, Finnish) and why?",
-        options: [
-            "A) One-Hot Encoding, because it's simple",
-            "B) Word2Vec, because it uses Skip-gram",
-            "C) GloVe, because of global statistics",
-            "D) FastText, because subword n-grams capture prefixes, suffixes, and root forms"
-        ],
-        correctAnswer: "D) FastText, because subword n-grams capture prefixes, suffixes, and root forms"
-    }
+export const QUESTIONS = [
+  {
+    title: "Reinforcement Learning Learner",
+    text: "In Reinforcement Learning, the learner is called a/an:",
+    options: [
+      "Classifier",
+      "Agent",
+      "Cluster",
+      "Regressor"
+    ],
+    correctAnswer: "Agent"
+  },
+  {
+    title: "Definition of Machine Learning",
+    text: "Which of the following best defines Machine Learning?",
+    options: [
+      "A program that is explicitly coded for every possible input",
+      "A field where computers learn from experience/data to improve performance on a task without being explicitly programmed",
+      "A method of storing large datasets efficiently",
+      "A hardware architecture for parallel computing"
+    ],
+    correctAnswer: "A field where computers learn from experience/data to improve performance on a task without being explicitly programmed"
+  },
+  {
+    title: "Overfitting",
+    text: "Overfitting occurs when a model:",
+    options: [
+      "Performs poorly on both training and test data",
+      "Learns the training data (including noise) too well, hurting performance on unseen data",
+      "Is too simple to capture patterns in data",
+      "Has zero variance and zero bias"
+    ],
+    correctAnswer: "Learns the training data (including noise) too well, hurting performance on unseen data"
+  },
+  {
+    title: "Supervised vs Unsupervised",
+    text: "Supervised learning differs from unsupervised learning in that:",
+    options: [
+      "Supervised learning uses labeled data; unsupervised learning uses unlabeled data",
+      "Supervised learning never uses training data",
+      "Unsupervised learning requires a reward signal",
+      "Supervised learning is only used for clustering"
+    ],
+    correctAnswer: "Supervised learning uses labeled data; unsupervised learning uses unlabeled data"
+  },
+  {
+    title: "Negative Examples in Candidate Elimination",
+    text: "In Candidate Elimination, when a negative example is encountered, the algorithm:",
+    options: [
+      "Generalizes S to include the negative example",
+      "Specializes G to exclude hypotheses that match the negative example",
+      "Deletes all hypotheses from S and G",
+      "Ignores it, same as in FIND-S"
+    ],
+    correctAnswer: "Specializes G to exclude hypotheses that match the negative example"
+  },
+  {
+    title: "Training and Testing Data Separation",
+    text: "Why must training and testing data be kept separate?",
+    options: [
+      "To reduce computation cost only",
+      "To prevent an overly optimistic/biased estimate of model performance",
+      "Because algorithms cannot process combined data",
+      "It is a legal requirement"
+    ],
+    correctAnswer: "To prevent an overly optimistic/biased estimate of model performance"
+  },
+  {
+    title: "FIND-S Algorithm Search",
+    text: "The FIND-S algorithm searches for:",
+    options: [
+      "The most general hypothesis consistent with negative examples only",
+      "The most specific hypothesis consistent with the positive training examples",
+      "A random hypothesis from the version space",
+      "The average of all hypotheses"
+    ],
+    correctAnswer: "The most specific hypothesis consistent with the positive training examples"
+  },
+  {
+    title: "Purpose of Training Data",
+    text: "Training data is used to:",
+    options: [
+      "Evaluate final model performance only",
+      "Fit/build the model's parameters",
+      "Store the deployed model",
+      "Replace the need for testing entirely"
+    ],
+    correctAnswer: "Fit/build the model's parameters"
+  },
+  {
+    title: "Version Space",
+    text: "The 'version space' in Candidate Elimination refers to:",
+    options: [
+      "The set of all hypotheses consistent with the training data, bounded by S and G",
+      "A single best hypothesis only",
+      "The list of negative examples",
+      "The number of features in the dataset"
+    ],
+    correctAnswer: "The set of all hypotheses consistent with the training data, bounded by S and G"
+  },
+  {
+    title: "Irrelevant Features",
+    text: "Irrelevant features in a dataset primarily cause:",
+    options: [
+      "Faster and more accurate training always",
+      "Added noise, higher computation, and potential spurious correlations",
+      "Guaranteed improvement in model generalization",
+      "Elimination of the need for feature selection"
+    ],
+    correctAnswer: "Added noise, higher computation, and potential spurious correlations"
+  },
+  {
+    title: "Semi-supervised Learning",
+    text: "Semi-supervised learning is best described as:",
+    options: [
+      "Learning using only unlabeled data",
+      "Learning using a small amount of labeled data with a large amount of unlabeled data",
+      "Learning purely through trial-and-error rewards",
+      "Learning that requires no data at all"
+    ],
+    correctAnswer: "Learning using a small amount of labeled data with a large amount of unlabeled data"
+  },
+  {
+    title: "Candidate Elimination Algorithm",
+    text: "The Candidate Elimination Algorithm maintains:",
+    options: [
+      "Only a single hypothesis",
+      "A Specific boundary (S) and a General boundary (G) representing the version space",
+      "Only negative examples",
+      "A neural network of weights"
+    ],
+    correctAnswer: "A Specific boundary (S) and a General boundary (G) representing the version space"
+  },
+  {
+    title: "Underfitting",
+    text: "Underfitting is characterized by:",
+    options: [
+      "High accuracy on training data, low accuracy on test data",
+      "The model being too complex",
+      "High bias, poor performance on both training and test data",
+      "Perfect generalization to new data"
+    ],
+    correctAnswer: "High bias, poor performance on both training and test data"
+  },
+  {
+    title: "Initial Hypothesis in FIND-S",
+    text: "The initial hypothesis in FIND-S is typically:",
+    options: [
+      "The most general hypothesis (?, ?, ..., ?)",
+      "The most specific hypothesis (∅, ∅, ..., ∅)",
+      "A randomly chosen training example",
+      "Undefined"
+    ],
+    correctAnswer: "The most specific hypothesis (∅, ∅, ..., ∅)"
+  },
+  {
+    title: "Unsupervised Learning Example",
+    text: "Which is an example of unsupervised learning?",
+    options: [
+      "Spam email classification",
+      "Predicting house prices",
+      "Customer segmentation via clustering",
+      "Handwritten digit recognition"
+    ],
+    correctAnswer: "Customer segmentation via clustering"
+  },
+  {
+    title: "Negative Examples in FIND-S",
+    text: "In FIND-S, how are negative training examples handled?",
+    options: [
+      "They are used to specialize the hypothesis",
+      "They are ignored",
+      "They reset the hypothesis to null",
+      "They are used to generalize the hypothesis"
+    ],
+    correctAnswer: "They are ignored"
+  },
+  {
+    title: "Well-posed Learning Problem",
+    text: "A learning problem is 'well-posed' when it clearly specifies:",
+    options: [
+      "Task (T), Performance measure (P), and Experience (E)",
+      "Only the dataset size",
+      "Only the programming language used",
+      "Only the hardware specifications"
+    ],
+    correctAnswer: "Task (T), Performance measure (P), and Experience (E)"
+  },
+  {
+    title: "Reinforcement Learning Signal",
+    text: "What signal guides learning in Reinforcement Learning?",
+    options: [
+      "Labeled input-output pairs",
+      "Cluster centroids",
+      "Reward or penalty from the environment",
+      "Feature correlation matrix"
+    ],
+    correctAnswer: "Reward or penalty from the environment"
+  },
+  {
+    title: "Poor-quality Data Causes",
+    text: "Which of the following is NOT a typical cause of poor-quality data?",
+    options: [
+      "Missing values",
+      "Sensor/measurement errors",
+      "Well-labeled, noise-free records",
+      "Duplicate or inconsistent entries"
+    ],
+    correctAnswer: "Well-labeled, noise-free records"
+  },
+  {
+    title: "Experience (E)",
+    text: "For a spam-classification system, what does 'E' (Experience) represent?",
+    options: [
+      "The percentage of correctly classified emails",
+      "The task of labeling emails as spam or not",
+      "A dataset of emails already labeled as spam/not spam",
+      "The email server hardware"
+    ],
+    correctAnswer: "A dataset of emails already labeled as spam/not spam"
+  }
 ];
 
 async function seed() {

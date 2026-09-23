@@ -136,9 +136,23 @@ clanRouter.post('/submit-answer', async (req, res) => {
 // --- 7. SAVE FINAL SCORE ---
 clanRouter.post('/save-score', async (req, res) => {
     try {
-        const { playerId, score } = req.body;
+        const { playerId } = req.body;
+        
+        let score = 0;
+        const playerAnswers = await db.select().from(answers).where(eq(answers.playerId, playerId));
+        if (playerAnswers.length > 0) {
+            const sessionRes = await db.select().from(sessions).where(eq(sessions.id, playerAnswers[0].sessionId));
+            if (sessionRes.length > 0) {
+                const sessionQuestions = await db.select().from(questions).where(eq(questions.quizId, sessionRes[0].quizId));
+                playerAnswers.forEach(ans => {
+                    const q = sessionQuestions.find(sq => sq.id === ans.questionId);
+                    if (q && q.correctAnswer === ans.answer) score += 1;
+                });
+            }
+        }
+
         await db.update(players).set({ score }).where(eq(players.id, playerId));
-        res.json({ success: true });
+        res.json({ success: true, score });
     } catch (error) { res.status(500).json({ error: "Failed to save score" }); }
 });
 clanRouter.post('/strike', async (req, res) => {

@@ -36,24 +36,19 @@ export const sessions = pgTable("sessions", {
     certificateBase64: text("certificate_base64"), 
 });
 
-// --- THE COMBATANTS: Clans and Players ---
-export const clans = pgTable("clans", {
-    id: serial("id").primaryKey(),
-    sessionId: integer("session_id").references(() => sessions.id, { onDelete: "cascade" }).notNull(),
-    name: varchar("name", { length: 255 }).notNull(),
-    totalScore: integer("total_score").default(0),
-    status: varchar("status", { length: 50 }).default("active"), // Tracks if they submitted early
-});
-
+// --- THE COMBATANTS: Players ---
+// The solo player table - clean and independent
 export const players = pgTable("players", {
-    id: serial("id").primaryKey(),
-    clerkId: varchar("clerk_id", { length: 255 }).notNull(),
-    clanId: integer("clan_id").references(() => clans.id, { onDelete: "cascade" }), 
-    name: varchar("name", { length: 255 }).notNull(),
-    usn: varchar("usn", { length: 50 }),
-    role: varchar("role", { length: 50 }).default("member"),
-    strikes: integer("strikes").default(0),
-    score: integer("score").default(0), // Final marks saved on submit
+  id: serial("id").primaryKey(),
+  clerkId: varchar("clerk_id", { length: 255 }),
+  sessionId: integer("session_id").references(() => sessions.id, { onDelete: "cascade" }),
+  usn: varchar("usn", { length: 255 }),
+  role: varchar("role", { length: 50 }).default("student"),
+  strikes: integer("strikes").default(0),
+  name: text("name").notNull(),
+  score: integer("score").default(0), 
+  status: text("status").default("active"), // e.g., 'active', 'eliminated', 'tournament_complete'
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // --- THE IRON VAULT: Answers ---

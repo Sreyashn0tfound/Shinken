@@ -47,8 +47,8 @@ export default function HeroCanvas() {
     if (forceTeacherDashboard) return <TeacherDashboard />;
 
     // --- THE UNIFIED RADAR ---
-    if (lobbyData?.clan) {
-        const status = lobbyData.clan.status;
+    if (lobbyData?.session) {
+        const status = lobbyData.session.status;
         const arenaStates = ["active", "gate_1_complete", "active_gate_2", "eliminated", "tournament_complete"];
 
         if (arenaStates.includes(status)) return <QuizArena />;

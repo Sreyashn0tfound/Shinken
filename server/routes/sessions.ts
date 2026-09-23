@@ -130,6 +130,37 @@ sessionRouter.get('/:hostId/dashboard', async (req, res) => {
     }
 });
 
+// --- 3.5 TEACHER DASHBOARD HISTORY ---
+sessionRouter.get('/:hostId/history', async (req, res) => {
+    try {
+        const { hostId } = req.params;
+        const pastSessions = await db.select().from(sessions)
+            .where(eq(sessions.hostId, hostId))
+            .orderBy(desc(sessions.id));
+
+        const history = [];
+        for (const session of pastSessions) {
+            const sessionClans = await db.select().from(clans).where(eq(clans.sessionId, session.id));
+            const sessionPlayers = await db.select().from(players);
+            const sessionAnswers = await db.select().from(answers).where(eq(answers.sessionId, session.id));
+            const sessionQuiz = await db.select().from(quizzes).where(eq(quizzes.id, session.quizId));
+            const sessionQuestions = await db.select().from(questions).where(eq(questions.quizId, session.quizId));
+
+            history.push({
+                session,
+                quiz: sessionQuiz[0],
+                clans: sessionClans,
+                players: sessionPlayers.filter(p => sessionClans.some(c => c.id === p.clanId)),
+                answers: sessionAnswers,
+                questions: sessionQuestions
+            });
+        }
+        res.json({ history });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch history." });
+    }
+});
+
 // 🚨 THE MISSING FIX: GATE LOCKS 🚨
 sessionRouter.post('/:id/lock1', async (req, res) => {
     try {

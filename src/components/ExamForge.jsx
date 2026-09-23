@@ -26,10 +26,13 @@ export default function ExamForge({ onBack }) {
 
         setIsParsing(true);
         try {
+            const formData = new FormData();
+            formData.append('pdf', uploadedFile);
+            formData.append('title', examTitle);
+
             const res = await fetch(`${API_URL}/ai/parse`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename: uploadedFile.name }),
+                body: formData,
             });
 
             if (!res.ok) {

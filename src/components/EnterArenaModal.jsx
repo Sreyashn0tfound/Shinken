@@ -53,8 +53,17 @@ export default function EnterArenaModal({ onClose, onJoinSuccess }) {
         finally { setIsLoading(false); }
     };
 
-    // ... (Keep the joinClan logic exactly the same, but pass `usn` and `playerName` if needed)
-
+    const handleJoinClan = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        try {
+            const result = await shogunApi.joinClan({ clanId: parseInt(joinCode), clerkId: user.id, playerName, usn });
+            localStorage.setItem("ikya_player_id", result.player.id);
+            localStorage.setItem("ikya_clan_id", joinCode);
+            onJoinSuccess();
+        } catch (error) { setErrorMsg("Failed to join clan."); } 
+        finally { setIsLoading(false); }
+    };
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ backgroundColor: '#f5fff6', padding: '3rem', border: '4px solid #111', width: '400px', textAlign: 'center', position: 'relative' }}>
@@ -85,6 +94,13 @@ export default function EnterArenaModal({ onClose, onJoinSuccess }) {
                         <h2 style={{ fontFamily: "'Shojumaru', cursive", margin: 0, color: '#8B0000' }}>NAME YOUR CLAN</h2>
                         <input placeholder="Clan Name" value={clanName} onChange={(e) => setClanName(e.target.value)} style={{ padding: '1rem', fontSize: '1.2rem', border: '2px solid #111' }} required />
                         <button type="submit" className="ink-button primary" disabled={isLoading}>PLANT THE SEED</button>
+                    </form>
+                )}
+                {step === 'join' && (
+                    <form onSubmit={handleJoinClan} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <h2 style={{ fontFamily: "'Shojumaru', cursive", margin: 0, color: '#8B0000' }}>JOIN CLAN</h2>
+                        <input placeholder="Clan ID" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} style={{ padding: '1rem', fontSize: '1.2rem', border: '2px solid #111' }} required />
+                        <button type="submit" className="ink-button primary" disabled={isLoading}>JOIN THE RANKS</button>
                     </form>
                 )}
             </div>

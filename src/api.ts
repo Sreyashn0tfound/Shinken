@@ -83,6 +83,12 @@ export const shogunApi = {
         return res.json();
     },
 
+    getHistory: async (hostId) => {
+        const res = await fetch(`${API_URL}/sessions/${hostId}/history`);
+        if (!res.ok) throw new Error("Failed to fetch history");
+        return res.json();
+    },
+
     initializeSession: async (payload) => {
         const res = await fetch(`${API_URL}/sessions/initialize`, {
             method: "POST",
