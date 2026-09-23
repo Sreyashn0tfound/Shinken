@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useUser } from "@clerk/clerk-react";
 import { shogunApi } from '../api';
 import FallingSakura from './FallingSakura';
-import ExamForge from './ExamForge'; 
+import ExamForge from './ExamForge';
+import * as XLSX from 'xlsx';
 
 export default function TeacherDashboard() {
     const { user } = useUser();
@@ -176,9 +177,18 @@ export default function TeacherDashboard() {
     const handleStart = async () => { if (window.confirm("Commence the Trials?")) await shogunApi.startTrials(session.id); };
     const handleReset = async () => { if (window.confirm("🚨 EMERGENCY RESTART: Erase all answers and send everyone to lobby?")) await shogunApi.resetTrials(session.id); };
 
-    const handleExportCSV = (sessionRecord) => {
+    const handleExportXLS = (sessionRecord) => {
         const { session, quiz, clans, players, answers, questions } = sessionRecord;
-        
+
+        // --- Sheet 1: Summary ---
+        const summaryRows = [
+            ["Session ID", session.id],
+            ["Quiz Title", quiz?.title || 'Unknown'],
+            ["Date", session.startTime ? new Date(session.startTime).toLocaleString() : 'N/A'],
+            [],
+            ["Clan Name", "Score"]
+        ];
+
         const clanScores = clans.map(clan => {
             let points = 0;
             const clanPlayerIds = players.filter(p => p.clanId === clan.id).map(p => p.id);
@@ -188,25 +198,61 @@ export default function TeacherDashboard() {
                 if (q && q.correctAnswer === ans.answer) points += 1;
             });
             return { clanName: clan.name, points };
+        }).sort((a, b) => b.points - a.points);
+
+        clanScores.forEach(row => summaryRows.push([row.clanName, row.points]));
+
+        // --- Sheet 2: Per-player breakdown ---
+        const playerRows = [["Player Name", "Clan", "Score", "Correct", "Total Answered"]];
+        players.forEach(player => {
+            const clan = clans.find(c => c.id === player.clanId);
+            const playerAnswers = answers.filter(a => a.playerId === player.id);
+            const correct = playerAnswers.filter(a => {
+                const q = questions.find(q => q.id === a.questionId);
+                return q && q.correctAnswer === a.answer;
+            }).length;
+            playerRows.push([
+                player.name || player.id,
+                clan?.name || 'Solo',
+                correct,
+                correct,
+                playerAnswers.length
+            ]);
         });
 
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += `Session ID,${session.id}\n`;
-        csvContent += `Quiz Title,${quiz?.title || 'Unknown'}\n`;
-        csvContent += `Date,${session.startTime ? new Date(session.startTime).toLocaleString() : 'N/A'}\n\n`;
-        csvContent += `Clan Name,Score\n`;
-        
-        clanScores.sort((a, b) => b.points - a.points).forEach(row => {
-            csvContent += `"${row.clanName}",${row.points}\n`;
+        // --- Sheet 3: Full answer log ---
+        const answerRows = [["Player", "Clan", "Question", "Submitted Answer", "Correct Answer", "Result"]];
+        answers.forEach(ans => {
+            const player = players.find(p => p.id === ans.playerId);
+            const clan = clans.find(c => c.id === player?.clanId);
+            const q = questions.find(q => q.id === ans.questionId);
+            const isCorrect = q && q.correctAnswer === ans.answer;
+            answerRows.push([
+                player?.name || ans.playerId,
+                clan?.name || 'Solo',
+                q?.text || `Q#${ans.questionId}`,
+                ans.answer,
+                q?.correctAnswer || '',
+                isCorrect ? '✅ Correct' : '❌ Wrong'
+            ]);
         });
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Exam_Results_Session_${session.id}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Build workbook
+        const wb = XLSX.utils.book_new();
+
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+        wsSummary['!cols'] = [{ wch: 30 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
+        const wsPlayers = XLSX.utils.aoa_to_sheet(playerRows);
+        wsPlayers['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 16 }];
+        XLSX.utils.book_append_sheet(wb, wsPlayers, "Players");
+
+        const wsAnswers = XLSX.utils.aoa_to_sheet(answerRows);
+        wsAnswers['!cols'] = [{ wch: 20 }, { wch: 18 }, { wch: 60 }, { wch: 60 }, { wch: 60 }, { wch: 12 }];
+        XLSX.utils.book_append_sheet(wb, wsAnswers, "Answer Log");
+
+        XLSX.writeFile(wb, `Exam_Results_Session_${session.id}.xlsx`);
     };
 
     // ==========================================
@@ -455,8 +501,8 @@ export default function TeacherDashboard() {
                                             <p style={{ margin: 0, fontWeight: 'bold', color: '#666' }}>Session: {record.session.pin} | Date: {record.session.startTime ? new Date(record.session.startTime).toLocaleDateString() : 'N/A'}</p>
                                             <p style={{ margin: '0.5rem 0 0 0', fontWeight: 'bold' }}>Participants: {record.clans.length} Clans</p>
                                         </div>
-                                        <button onClick={() => handleExportCSV(record)} className="ink-button primary" style={{ fontSize: '1.2rem' }}>
-                                            📊 EXPORT CSV
+                                        <button onClick={() => handleExportXLS(record)} className="ink-button primary" style={{ fontSize: '1.2rem' }}>
+                                            📊 EXPORT XLS
                                         </button>
                                     </div>
                                 ))}

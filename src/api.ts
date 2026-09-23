@@ -162,16 +162,6 @@ getQuestions: async (quizId) => {
     },
 
     // --- AI FORGE ---
-    parseWithGemini: async (payload) => {
-        const res = await fetch(`${API_URL}/ai/parse`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error("Gemini parsing failed");
-        return res.json();
-    },
-
     saveAIExam: async (payload) => {
         const res = await fetch(`${API_URL}/questions/ai-forge`, {
             method: "POST",
